@@ -21,7 +21,7 @@
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
-      background: var(--bg-dark);
+      background: radial-gradient(circle at top, #14182b 0, #000 45%);
       color: var(--text-main);
     }
 
@@ -200,7 +200,7 @@
       100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
     }
 
-    /* 정답/오답 */
+    /* 정답/오답 애니메이션 */
     @keyframes correctGlow {
       0% { box-shadow: 0 0 8px #00ff88; }
       50% { box-shadow: 0 0 32px #00ff88; }
@@ -393,7 +393,7 @@
 </div>
 
 <script>
-  // ✅ 현재 Web App 배포 URL로 바꿔도 되고, 지금 것 그대로 써도 됨
+  // 🔴 여기에 너의 Apps Script Web App "exec" URL 붙여넣기!
   const API_URL = "https://script.google.com/macros/s/AKfycbxOHZ6zztNqD5s5loXdZnb3vFX86jhTSYncjKjIIO66vX8ETevLN_2tneD32dIKtddnSw/exec";
 
   let currentPlayerName = null;
@@ -405,21 +405,26 @@
   let gameOver = false;
   let isAnswering = false;
 
-  /* 공통 API 호출 함수 */
+  /* 공통 API 호출 (preflight 방지: Content-Type 설정 안 함!) */
   async function api(payload) {
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    return res.json();
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error("API JSON parse error:", text);
+      return { error: "invalid response" };
+    }
   }
 
   /* LOGIN */
   async function handleLogin() {
     const name = document.getElementById("login-name").value.trim();
-    const err = document.getElementById("login-error");
-    const btn = document.getElementById("login-btn");
+    const err  = document.getElementById("login-error");
+    const btn  = document.getElementById("login-btn");
 
     if (!name) {
       err.textContent = "이름을 입력하세요.";
@@ -434,17 +439,18 @@
       const res = await api({ type: "login", name });
 
       if (res.error) throw new Error(res.error);
+      if (!res.ok && !res.name) throw new Error("로그인 실패");
 
       currentPlayerName = res.name;
-      currentScore = res.score;
+      currentScore      = res.score || 0;
 
       document.getElementById("top-name").textContent  = "이름: " + res.name;
-      document.getElementById("top-score").textContent = "점수: " + res.score;
+      document.getElementById("top-score").textContent = "점수: " + currentScore;
 
-      updatePlayers(res.players);
+      updatePlayers(res.players || []);
 
       document.getElementById("login-screen").style.display = "none";
-      document.getElementById("wrapper").style.display = "block";
+      document.getElementById("wrapper").style.display      = "block";
 
       loadQuiz();
       loadChatLog();
@@ -452,13 +458,14 @@
       // 5초마다 플레이어/채팅 갱신
       setInterval(async () => {
         const p = await api({ type: "getPlayers" });
-        updatePlayers(p.players || []);
+        if (!p.error) updatePlayers(p.players || []);
       }, 5000);
 
       setInterval(loadChatLog, 5000);
 
     } catch (e) {
-      err.textContent = e.message || String(e);
+      console.error(e);
+      err.textContent = e.message || "로그인 중 오류 발생";
     }
 
     btn.disabled = false;
@@ -485,7 +492,9 @@
       }
       currentQuizId = q.id;
       document.getElementById("quiz-question").textContent = q.question;
+
     } catch (e) {
+      console.error(e);
       document.getElementById("quiz-question").textContent =
         "퀴즈를 불러올 수 없습니다: " + (e.message || String(e));
     }
@@ -496,8 +505,8 @@
     isAnswering = true;
 
     const status = document.getElementById("quiz-status");
-    const btnO = document.getElementById("btnO");
-    const btnX = document.getElementById("btnX");
+    const btnO   = document.getElementById("btnO");
+    const btnX   = document.getElementById("btnX");
 
     status.textContent = "⏳ 채점 중...";
     btnO.disabled = true;
@@ -555,6 +564,7 @@
       }, 900);
 
     } catch (e) {
+      console.error(e);
       status.textContent = "오류: " + (e.message || String(e));
       btnO.disabled = false;
       btnX.disabled = false;
@@ -567,15 +577,14 @@
     document.getElementById("quiz-question").textContent =
       "게임 종료! 총 " + questionCount + "문제를 풀었습니다.";
     document.getElementById("quiz-buttons").style.display = "none";
-    document.getElementById("quiz-status").textContent = "상점은 계속 사용할 수 있습니다.";
+    document.getElementById("quiz-status").textContent    = "상점은 계속 사용할 수 있습니다.";
     document.getElementById("final-scoreboard").style.display = "block";
 
-    // 최종 점수판은 5초마다 getPlayers로 갱신되므로 여기서는 메시지만
     document.getElementById("final-message").textContent =
       currentPlayerName + "님의 최종 점수: " + currentScore + "점";
 
     api({ type: "getPlayers" }).then(p => {
-      updateFinalScoreboard(p.players || []);
+      if (!p.error) updateFinalScoreboard(p.players || []);
     });
   }
 
@@ -590,7 +599,7 @@
     });
   }
 
-  /* PARTICLES */
+  /* 파티클 */
   function createParticles(btn) {
     const rect = btn.getBoundingClientRect();
     for (let i = 0; i < 10; i++) {
@@ -609,7 +618,7 @@
     }
   }
 
-  /* TABS */
+  /* 탭 전환 */
   function switchTab(tab) {
     const storePanel = document.getElementById("store-panel");
     const chatPanel  = document.getElementById("chat-panel");
@@ -629,9 +638,9 @@
     }
   }
 
-  /* PLAYERS */
+  /* 플레이어 리스트 */
   function updatePlayers(players) {
-    const list    = document.getElementById("players-list");
+    const list     = document.getElementById("players-list");
     const minusSel = document.getElementById("minus-target");
     const plusSel  = document.getElementById("plus-target");
 
@@ -662,15 +671,14 @@
       }
     });
 
-    // 최종 점수판도 같이 갱신
     if (gameOver) {
       updateFinalScoreboard(players);
     }
   }
 
-  /* SHOP */
+  /* 상점 */
   async function useShop(type) {
-    const msgEl   = document.getElementById("store-message");
+    const msgEl    = document.getElementById("store-message");
     const minusSel = document.getElementById("minus-target");
     const plusSel  = document.getElementById("plus-target");
 
@@ -702,14 +710,15 @@
           : `${res.toName}에게 +1 선물했습니다!`;
 
     } catch (e) {
+      console.error(e);
       msgEl.textContent = e.message || String(e);
     }
   }
 
-  /* CHAT */
+  /* 채팅 */
   async function sendChat() {
     const input = document.getElementById("chat-input");
-    const msg = input.value.trim();
+    const msg   = input.value.trim();
     if (!msg) return;
 
     await api({
@@ -725,7 +734,7 @@
   async function loadChatLog() {
     try {
       const res = await api({ type: "chatList", limit: 30 });
-      const log = Array.isArray(res) ? res : (res.list || []);
+      const log = Array.isArray(res) ? res : [];
 
       renderChatLog(log);
 
