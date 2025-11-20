@@ -25,19 +25,17 @@ body {
   background: radial-gradient(circle at 50% 20%, #1a1f3c 0%, #090b19 40%, #000000 80%),
               radial-gradient(circle at bottom, #0d0f1f 0%, #000000 70%);
   background-blend-mode: screen;
-
+  
   min-height: 100vh;
+  /* flex 제거 */
+  display: block;
 }
     /* LOGIN */
 #login-screen {
-    max-width: 420px;
-    margin: 0 auto;  
-    padding: 30px 24px 36px;
-    text-align: center;
-    background: #050509;
-    border-radius: 16px;
-    box-shadow: 0 0 25px rgba(0,0,0,0.9);
-    border: 1px solid #222;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
     #login-screen h1 {
       font-family: 'Orbitron', sans-serif;
@@ -82,10 +80,8 @@ body {
 
     /* MAIN WRAPPER */
 #wrapper {
-  width: 100%;
-  max-width: 1200px;
-  padding: 20px;
-  margin: auto; /* 위아래 margin 제거 */
+  margin-top: 250px;  /* 로그인 박스 아래로 적당히 내려오도록 */
+  display: none;
 }
 
     /* TOP BAR */
@@ -972,6 +968,7 @@ body {
 
 </body>
 </html>
+
 
 
 
