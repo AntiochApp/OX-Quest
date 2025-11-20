@@ -5,6 +5,7 @@
   <title>OX Quiz – Neon Black</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- 폰트 -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
   <style>
@@ -13,82 +14,132 @@
       --panel-dark: #12121a;
       --accent-blue: #00eaff;
       --accent-purple: #9b5cff;
+      --accent-pink: #ff4bcb;
       --text-main: #ffffff;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
-body {
-  margin: 0;
-  font-family: 'Poppins', sans-serif;
+    /* 전체 배경 + 기본 폰트 */
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background:
+        radial-gradient(circle at 50% 20%, #1a1f3c 0%, #090b19 40%, #000000 80%),
+        radial-gradient(circle at bottom, #0d0f1f 0%, #000000 70%);
+      background-blend-mode: screen;
+      min-height: 100vh;
 
-  background: radial-gradient(circle at 50% 20%, #1a1f3c 0%, #090b19 40%, #000000 80%),
-              radial-gradient(circle at bottom, #0d0f1f 0%, #000000 70%);
-  background-blend-mode: screen;
-  
-  min-height: 100vh;
-  /* flex 제거 */
-  display: block;
-}
-    /* LOGIN */
-#login-screen {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+    }
+
+    /* 텍스트 기본 흰색 */
+    body, div, span, p, h1, h2, h3, h4, h5, label {
+      color: #e6f3ff;
+    }
+
+    /* 중앙 컨테이너 */
+    #app {
+      width: 100%;
+      max-width: 1200px;
+      padding: 16px;
+    }
+
+    /* ============ LOGIN ============ */
+    #login-screen {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 30px 24px 36px;
+      text-align: center;
+      background: rgba(3, 4, 10, 0.98);
+      border-radius: 18px;
+      border: 1px solid #2a2a3a;
+      box-shadow:
+        0 0 25px rgba(0, 0, 0, 0.9),
+        0 0 35px rgba(0, 234, 255, 0.25);
+    }
+
     #login-screen h1 {
       font-family: 'Orbitron', sans-serif;
       font-size: 26px;
-      margin-bottom: 14px;
+      margin-bottom: 18px;
       color: var(--accent-blue);
-      text-shadow: 0 0 10px var(--accent-blue);
+      text-shadow: 0 0 12px rgba(0, 234, 255, 0.9);
+      letter-spacing: 0.12em;
     }
+
     .login-input {
-      width: 90%;
+      width: 100%;
       padding: 12px;
       border-radius: 10px;
       border: 1px solid #444;
-      background: #111;
+      background: #111319;
       color: #fff;
       margin-bottom: 14px;
       font-size: 15px;
+      outline: none;
+      box-shadow: 0 0 0 rgba(0,0,0,0);
     }
+
+    .login-input::placeholder {
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .login-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 10px rgba(0,234,255,0.7);
+    }
+
     #login-btn {
-      width: 70%;
+      width: 100%;
       padding: 11px;
       border-radius: 10px;
       border: none;
-      background: linear-gradient(135deg, var(--accent-blue), #0066ff);
+      background: linear-gradient(135deg, #00eaff, #0066ff);
       color: #000;
       font-family: 'Orbitron', sans-serif;
       font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 0 15px var(--accent-blue);
+      box-shadow: 0 0 18px rgba(0,234,255,0.9);
+      transition: 0.15s;
     }
+
+    #login-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 20px rgba(0,234,255,0.9),
+        0 0 40px rgba(0,234,255,0.7);
+    }
+
     #login-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       box-shadow: none;
     }
+
     #login-error {
       color: #ff4b9f;
-      margin-top: 8px;
+      margin-top: 10px;
       font-size: 13px;
       min-height: 18px;
     }
 
-    /* MAIN WRAPPER */
-#wrapper {
-  width: 100%;
-  max-width: 1200px;
-  display: none;
-
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
+    /* ============ MAIN WRAPPER ============ */
+    #wrapper {
+      display: none;   /* 로그인 전에는 감춤 */
+      background: rgba(4, 6, 16, 0.98);
+      border-radius: 18px;
+      border: 1px solid #2a2a3a;
+      padding: 16px 18px 20px;
+      box-shadow:
+        0 0 28px rgba(0,0,0,0.8),
+        0 0 40px rgba(0,0,0,0.6);
+    }
 
     /* TOP BAR */
     .top-bar {
@@ -97,36 +148,51 @@ body {
       padding: 8px 12px;
       background: #111119;
       border-radius: 10px;
-      border: 1px solid #333;
+      border: 1px solid #333847;
+      box-shadow: 0 0 16px rgba(0,0,0,0.6);
     }
+
     #top-info {
       flex: 1;
-      font-size: 14px;
+      font-size: 13px;
+      color: #d4e6ff;
     }
+
+    #top-info span {
+      margin-right: 10px;
+    }
+
     #latest-chat {
       flex: 2;
       text-align: center;
       font-size: 13px;
       color: var(--accent-blue);
       min-height: 18px;
+      text-shadow: 0 0 6px rgba(0,234,255,0.7);
     }
 
     .tab-btn {
       padding: 7px 12px;
       border-radius: 8px;
       border: 1px solid #555;
-      background: #222;
+      background: #20222f;
       color: #ddd;
       font-family: 'Orbitron', sans-serif;
-      font-size: 12px;
+      font-size: 11px;
       margin-left: 6px;
       cursor: pointer;
+      transition: 0.15s;
     }
+
     .tab-btn.active {
-      background: #555;
+      background: #5551aa;
       color: #fff;
       border-color: var(--accent-purple);
-      box-shadow: 0 0 8px rgba(155,92,255,0.7);
+      box-shadow: 0 0 12px rgba(155,92,255,0.9);
+    }
+
+    .tab-btn:hover {
+      transform: translateY(-1px);
     }
 
     /* MAIN GRID */
@@ -136,65 +202,82 @@ body {
       gap: 14px;
     }
 
-    /* QUIZ */
+    /* QUIZ 영역 */
     .quiz-area {
       flex: 2.5;
       padding: 24px 20px 28px;
-      background: #08080f;
-      border-radius: 12px;
-      border: 1px solid #29293a;
+      background: radial-gradient(circle at top, #141728 0, #05060c 55%);
+      border-radius: 14px;
+      border: 1px solid #282b44;
+      box-shadow:
+        0 0 25px rgba(0,0,0,0.9),
+        0 0 40px rgba(0,0,0,0.7);
     }
+
     .quiz-question {
       font-size: 22px;
       min-height: 56px;
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      color: #ffffff;
+      text-shadow: 0 0 6px rgba(0, 200, 255, 0.4);
     }
 
     #timer {
       text-align: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       font-size: 18px;
       color: var(--accent-blue);
       min-height: 22px;
+      text-shadow: 0 0 10px rgba(0,234,255,0.9);
     }
 
     .quiz-buttons {
       display: flex;
       justify-content: center;
-      gap: 26px;
-      margin-bottom: 12px;
+      gap: 40px;
+      margin-bottom: 16px;
       position: relative;
       overflow: visible;
     }
 
     .neon-btn {
       position: relative;
-      width: 120px;
-      height: 120px;
+      width: 140px;
+      height: 140px;
       border-radius: 50%;
       border: none;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 60px;
+      font-size: 64px;
       font-family: 'Orbitron', sans-serif;
       color: #fff;
-      text-shadow: 0 0 10px #fff;
-      transition: 0.15s;
+      text-shadow: 0 0 12px #fff;
+      transition: 0.18s;
       overflow: hidden;
     }
+
     .neon-o {
-      background: radial-gradient(circle, var(--accent-blue), #0077ff);
-      box-shadow: 0 0 20px var(--accent-blue);
+      background: radial-gradient(circle at 30% 20%, #ffffff 0, #00eaff 40%, #0077ff 80%);
+      box-shadow:
+        0 0 18px rgba(0,234,255,0.9),
+        0 0 40px rgba(0,234,255,0.7);
     }
+
     .neon-x {
-      background: radial-gradient(circle, #ff0099, #b3005a);
-      box-shadow: 0 0 20px #ff0099aa;
+      background: radial-gradient(circle at 30% 20%, #ffffff 0, #ff0099 40%, #b3005a 80%);
+      box-shadow:
+        0 0 18px rgba(255,0,153,0.9),
+        0 0 40px rgba(255,0,153,0.7);
     }
+
     .neon-btn:hover {
-      transform: scale(1.05);
+      transform: scale(1.06) translateY(-2px);
+      box-shadow:
+        0 0 26px rgba(255,255,255,0.9),
+        0 0 50px rgba(0,0,0,0.9);
     }
 
     /* 파티클 */
@@ -208,47 +291,67 @@ body {
       pointer-events: none;
       animation: particle-pop 0.6s ease-out forwards;
     }
+
     @keyframes particle-pop {
-      0% { transform: translate(0,0) scale(1); opacity: 1; }
+      0%   { transform: translate(0,0) scale(1);   opacity: 1; }
       100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
     }
 
     /* 정답/오답 애니메이션 */
     @keyframes correctGlow {
-      0% { box-shadow: 0 0 8px #00ff88; }
-      50% { box-shadow: 0 0 32px #00ff88; }
-      100% { box-shadow: 0 0 8px #00ff88; }
+      0%   { box-shadow: 0 0 10px #00ff88; }
+      50%  { box-shadow: 0 0 40px #00ff88; }
+      100% { box-shadow: 0 0 10px #00ff88; }
     }
+
     @keyframes wrongShake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-10px); }
-      50% { transform: translateX(10px); }
-      75% { transform: translateX(-10px); }
+      0%   { transform: translateX(0); }
+      25%  { transform: translateX(-10px); }
+      50%  { transform: translateX(10px); }
+      75%  { transform: translateX(-10px); }
       100% { transform: translateX(0); }
     }
-    .correct-glow { animation: correctGlow 0.7s ease-out; }
-    .wrong-shake { animation: wrongShake 0.4s ease-out; }
+
+    .correct-glow {
+      animation: correctGlow 0.7s ease-out;
+    }
+
+    .wrong-shake {
+      animation: wrongShake 0.4s ease-out;
+    }
 
     #quiz-status {
       text-align: center;
       min-height: 22px;
       font-size: 16px;
-      margin-top: 4px;
+      margin-top: 8px;
+      color: #e6f3ff;
     }
 
     /* GAME END */
     #final-scoreboard {
       display: none;
-      margin-top: 12px;
-      border-top: 1px solid #333;
+      margin-top: 16px;
+      border-top: 1px solid #333a55;
       padding-top: 10px;
-      font-size: 16px;
+      font-size: 15px;
     }
+
+    #final-scoreboard h3 {
+      margin: 0 0 6px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      color: var(--accent-blue);
+      text-shadow: 0 0 8px rgba(0,234,255,0.7);
+    }
+
     #final-scoreboard li {
       display: flex;
       justify-content: space-between;
       padding: 3px 0;
-      border-bottom: 1px solid #222;
+      border-bottom: 1px solid #202336;
+      font-size: 14px;
+      color: #dbe7ff;
     }
 
     /* SIDEBAR */
@@ -261,10 +364,20 @@ body {
 
     .panel {
       background: #090912;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid #29293a;
       padding: 10px 10px 12px;
       font-size: 13px;
+      box-shadow: 0 0 18px rgba(0,0,0,0.7);
+      color: #e6eaff;
+    }
+
+    .panel h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-family: 'Orbitron', sans-serif;
+      color: var(--accent-blue);
+      text-shadow: 0 0 8px rgba(0,234,255,0.7);
     }
 
     .players-list .player-row {
@@ -273,11 +386,54 @@ body {
       padding: 4px 2px;
       border-bottom: 1px solid #1f1f2a;
       font-size: 13px;
+      color: #d8e9ff;
     }
+
     .first-place {
       color: var(--accent-blue);
       font-weight: 600;
       text-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    /* 상점 셀렉트 & 버튼 */
+    select {
+      background: #0b0d14;
+      border: 1px solid #2e3b55;
+      color: #d8e9ff;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 8px var(--accent-blue);
+    }
+
+    #store-panel button {
+      background: linear-gradient(135deg, #00eaff, #007bff);
+      border: none;
+      color: #000;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: 0.15s;
+    }
+
+    #store-panel button:hover {
+      box-shadow: 0 0 12px var(--accent-blue);
+      transform: scale(1.05);
+    }
+
+    #store-message {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--accent-purple);
     }
 
     /* CHAT PANEL */
@@ -289,20 +445,31 @@ body {
       padding: 6px;
       border: 1px solid #262636;
       font-size: 12px;
+      color: #c5ddff;
     }
+
     .chat-input-box {
       display: flex;
       margin-top: 8px;
       gap: 4px;
     }
+
     .chat-input-box input {
       flex: 1;
       padding: 7px;
       border-radius: 6px;
       border: 1px solid #444;
-      background: #111;
+      background: #111319;
       color: #fff;
+      font-size: 12px;
     }
+
+    .chat-input-box input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 8px rgba(0,234,255,0.7);
+    }
+
     .chat-input-box button {
       padding: 7px 10px;
       border-radius: 6px;
@@ -311,177 +478,219 @@ body {
       color: #000;
       font-family: 'Orbitron', sans-serif;
       cursor: pointer;
+      font-size: 12px;
     }
 
-    @media (max-width: 768px) {
-      #wrapper { max-width: 100%; }
-      .main { flex-direction: column; }
-      .neon-btn { width: 90px; height: 90px; font-size: 44px; }
+    .chat-input-box button:hover {
+      box-shadow: 0 0 10px rgba(0,234,255,0.8);
     }
 
+    /* MODAL */
     .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(4px);
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
 
-.modal-content {
-    background: #0d0d0f;
-    padding: 30px 40px;
-    border-radius: 18px;
-    text-align: center;
-    width: 350px;
-    box-shadow: 0 0 30px rgba(0,255,255,0.4);
-    border: 2px solid rgba(0,255,255,0.35);
-    animation: fadeIn 0.25s ease-out;
-}
+    .modal-content {
+      background: #0d0d0f;
+      padding: 30px 40px;
+      border-radius: 18px;
+      text-align: center;
+      width: 350px;
+      box-shadow: 0 0 30px rgba(0,255,255,0.4);
+      border: 2px solid rgba(0,255,255,0.35);
+      animation: fadeIn 0.25s ease-out;
+    }
 
-@keyframes fadeIn {
-    from { transform: scale(0.85); opacity: 0; }
-    to   { transform: scale(1); opacity: 1; }
-}
+    @keyframes fadeIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
 
-.modal-content p {
-    font-size: 18px;
-    margin-bottom: 25px;
-    color: #eaffff;
-}
+    .modal-content p {
+      font-size: 18px;
+      margin-bottom: 25px;
+      color: #eaffff;
+    }
 
-.modal-buttons {
-    display: flex;
-    justify-content: space-around;
-}
+    .modal-buttons {
+      display: flex;
+      justify-content: space-around;
+    }
 
-.modal-buttons button {
-    padding: 10px 22px;
-    border-radius: 10px;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    color: #fff;
-    transition: 0.2s;
-}
+    .modal-buttons button {
+      padding: 10px 22px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      cursor: pointer;
+      color: #fff;
+      transition: 0.2s;
+      font-family: 'Orbitron', sans-serif;
+    }
 
-#modalOk {
-    background: rgba(0,200,255,0.8);
-    box-shadow: 0 0 15px rgba(0,255,255,0.7);
-}
+    #modalOk {
+      background: rgba(0,200,255,0.85);
+      box-shadow: 0 0 15px rgba(0,255,255,0.7);
+    }
 
-#modalCancel {
-    background: rgba(255,70,120,0.75);
-    box-shadow: 0 0 15px rgba(255,70,120,0.7);
-}
+    #modalCancel {
+      background: rgba(255,70,120,0.85);
+      box-shadow: 0 0 15px rgba(255,70,120,0.7);
+    }
 
-#modalOk:hover {
-    background: rgba(0,255,255,1);
-}
+    #modalOk:hover {
+      background: rgba(0,255,255,1);
+    }
 
-#modalCancel:hover {
-    background: rgba(255,70,120,1);
-}
+    #modalCancel:hover {
+      background: rgba(255,70,120,1);
+    }
+
+    /* 반응형 */
+    @media (max-width: 900px) {
+      #app {
+        padding: 8px;
+      }
+      #wrapper {
+        padding: 12px;
+      }
+      .main {
+        flex-direction: column;
+      }
+      .quiz-buttons {
+        gap: 20px;
+      }
+      .neon-btn {
+        width: 110px;
+        height: 110px;
+        font-size: 50px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .top-bar {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      #latest-chat {
+        text-align: left;
+      }
+    }
+
   </style>
 </head>
 <body>
 
-<!-- 사운드 -->
-<audio id="sound-correct" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d9c06b9b1.mp3?filename=correct-2-46134.mp3"></audio>
-<audio id="sound-wrong"   src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3030a63a70.mp3?filename=error-126627.mp3"></audio>
+<div id="app">
 
-<!-- LOGIN -->
-<div id="login-screen">
-  <h1>OX QUIZ GAME</h1>
-  <input id="login-name" class="login-input" placeholder="이름을 입력하세요" />
-  <button id="login-btn" onclick="handleLogin()">시작하기</button>
-  <div id="login-error"></div>
-</div>
+  <!-- 사운드 -->
+  <audio id="sound-correct" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d9c06b9b1.mp3?filename=correct-2-46134.mp3"></audio>
+  <audio id="sound-wrong"   src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3030a63a70.mp3?filename=error-126627.mp3"></audio>
 
-<!-- GAME WRAPPER -->
-<div id="wrapper">
-  <div class="top-bar">
-    <div id="top-info">
-      <span id="top-name">이름: ?</span>
-      &nbsp;&nbsp;
-      <span id="top-score">점수: 0</span>
-      &nbsp;&nbsp;
-      <span id="top-count">진행: 0 / 100</span>
-    </div>
-    <div id="latest-chat">(채팅 없음)</div>
-
-    <button class="tab-btn active" id="tab-store" onclick="switchTab('store')">상점</button>
-    <button class="tab-btn" id="tab-chat" onclick="switchTab('chat')">채팅</button>
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <h1>OX QUIZ GAME</h1>
+    <input id="login-name" class="login-input" placeholder="이름을 입력하세요" />
+    <button id="login-btn" onclick="handleLogin()">시작하기</button>
+    <div id="login-error"></div>
   </div>
 
-  <div class="main">
-    <!-- QUIZ -->
-    <div class="quiz-area">
-      <div class="quiz-question" id="quiz-question">퀴즈를 불러오는 중...</div>
-      <div id="timer"></div>
-
-      <div class="quiz-buttons" id="quiz-buttons">
-        <button class="neon-btn neon-o" id="btnO" onclick="answer('O')"><i>◯</i></button>
-        <button class="neon-btn neon-x" id="btnX" onclick="answer('X')"><i>✕</i></button>
+  <!-- GAME WRAPPER -->
+  <div id="wrapper">
+    <div class="top-bar">
+      <div id="top-info">
+        <span id="top-name">이름: ?</span>
+        <span id="top-score">점수: 0</span>
+        <span id="top-count">진행: 0 / 100</span>
       </div>
 
-      <div id="quiz-status"></div>
+      <div id="latest-chat">(채팅 없음)</div>
 
-      <div id="final-scoreboard">
-        <h3>최종 점수판</h3>
-        <p id="final-message"></p>
-        <ul id="final-score-list"></ul>
-      </div>
+      <button class="tab-btn active" id="tab-store" onclick="switchTab('store')">상점</button>
+      <button class="tab-btn" id="tab-chat" onclick="switchTab('chat')">채팅</button>
     </div>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
+    <div class="main">
+      <!-- QUIZ -->
+      <div class="quiz-area">
+        <div class="quiz-question" id="quiz-question">퀴즈를 불러오는 중...</div>
+        <div id="timer"></div>
 
-      <!-- STORE -->
-      <div class="panel" id="store-panel">
-        <h3>상점</h3>
-        <p>내 1점 사용 → 선택한 사람 -1점</p>
-        <select id="minus-target"></select>
-        <button onclick="useShop('minus')">-1점 사용</button>
-        <br><br>
+        <div class="quiz-buttons" id="quiz-buttons">
+          <button class="neon-btn neon-o" id="btnO" onclick="answer('O')"><i>◯</i></button>
+          <button class="neon-btn neon-x" id="btnX" onclick="answer('X')"><i>✕</i></button>
+        </div>
 
-        <p>내 1점 사용 → 선택한 사람 +1점</p>
-        <select id="plus-target"></select>
-        <button onclick="useShop('plus')">+1점 주기</button>
+        <div id="quiz-status"></div>
 
-        <div id="store-message" style="margin-top:8px; color:#9b5cff"></div>
-      </div>
-
-      <!-- CHAT -->
-      <div class="panel" id="chat-panel" style="display:none;">
-        <h3>채팅</h3>
-        <div class="chat-log" id="chat-log"></div>
-
-        <div class="chat-input-box">
-          <input id="chat-input" placeholder="메시지 입력" />
-          <button onclick="sendChat()">전송</button>
+        <div id="final-scoreboard">
+          <h3>최종 점수판</h3>
+          <p id="final-message"></p>
+          <ul id="final-score-list"></ul>
         </div>
       </div>
 
-      <!-- PLAYERS -->
-      <div class="panel players-list">
-        <h3>플레이어</h3>
-        <div id="players-list"></div>
-      </div>
-    <div id="neonModal" class="modal">
-        <div class="modal-content">
-            <p id="modalMessage"></p>
-            <div class="modal-buttons">
-                <button id="modalOk">확인</button>
-                <button id="modalCancel">취소</button>
-            </div>
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+
+        <!-- STORE -->
+        <div class="panel" id="store-panel">
+          <h3>상점</h3>
+          <p>내 1점 사용 → 선택한 사람 <b>-1점</b></p>
+          <select id="minus-target"></select>
+          <button onclick="useShop('minus')">-1점 사용</button>
+          <br><br>
+
+          <p>내 1점 사용 → 선택한 사람 <b>+1점</b></p>
+          <select id="plus-target"></select>
+          <button onclick="useShop('plus')">+1점 주기</button>
+
+          <div id="store-message"></div>
         </div>
+
+        <!-- CHAT -->
+        <div class="panel" id="chat-panel" style="display:none;">
+          <h3>채팅</h3>
+          <div class="chat-log" id="chat-log"></div>
+
+          <div class="chat-input-box">
+            <input id="chat-input" placeholder="메시지 입력" />
+            <button onclick="sendChat()">전송</button>
+          </div>
+        </div>
+
+        <!-- PLAYERS -->
+        <div class="panel players-list">
+          <h3>플레이어</h3>
+          <div id="players-list"></div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- 네온 확인 모달 -->
+  <div id="neonModal" class="modal">
+    <div class="modal-content">
+      <p id="modalMessage"></p>
+      <div class="modal-buttons">
+        <button id="modalOk">확인</button>
+        <button id="modalCancel">취소</button>
+      </div>
+    </div>
+  </div>
+
+</div> <!-- /app -->
 
 <script>
   /* ★ Apps Script JSONP Web App URL ★ */
@@ -490,7 +699,6 @@ body {
   /*************** JSONP 헬퍼 ***************/
   function jsonp(url, callback) {
     const cbName = "cb_" + Math.random().toString(36).substring(2, 12);
-
     const script = document.createElement("script");
     script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cbName;
 
@@ -751,16 +959,20 @@ body {
   }
 
   function askNextStep() {
-  showNeonConfirm(
-    "이번 문제를 풀었습니다.\n다음 문제로 계속 진행할까요?",
-    () => nextQuiz(),  // 확인
-    () => {
-      document.getElementById("quiz-status").textContent =
-        "일시 정지되었습니다. 나중에 다시 로그인하면 이어서 할 수 있어요.";
-      clearTimer();
-    }
-  );
-}
+    showNeonConfirm(
+      "이번 문제를 풀었습니다.\n다음 문제로 계속 진행할까요?",
+      () => nextQuiz(),  // 확인
+      () => {
+        document.getElementById("quiz-status").textContent =
+          "일시 정지되었습니다. 나중에 다시 로그인하면 이어서 할 수 있어요.";
+        clearTimer();
+      }
+    );
+  }
+
+  function nextQuiz() { 
+    loadQuiz();
+  }
 
   function endGame() {
     gameOver = true;
@@ -806,7 +1018,9 @@ body {
       p.style.left = rect.width / 2 + "px";
       p.style.top  = rect.height / 2 + "px";
       btn.appendChild(p);
-      setTimeout(function() { if (p.parentNode) btn.removeChild(p); }, 600);
+      setTimeout(function() {
+        if (p.parentNode) btn.removeChild(p);
+      }, 600);
     }
   }
 
@@ -899,7 +1113,7 @@ body {
       msgEl.textContent =
         (type === "minus")
           ? (res.toName + "의 점수를 -1 했습니다!")
-          : (res.toName + "에게 +1 선물했습니다!");
+          : (res.toName + "에게 +1 선물했습니다!";
     });
   }
 
@@ -951,6 +1165,8 @@ body {
 
     chatEl.scrollTop = chatEl.scrollHeight;
   }
+
+  /*************** 네온 확인 모달 ***************/
   function showNeonConfirm(message, onOk, onCancel) {
     document.getElementById("modalMessage").innerText = message;
 
@@ -958,30 +1174,17 @@ body {
     modal.style.display = "flex";
 
     document.getElementById("modalOk").onclick = () => {
-        modal.style.display = "none";
-        if (onOk) onOk();
+      modal.style.display = "none";
+      if (onOk) onOk();
     };
 
     document.getElementById("modalCancel").onclick = () => {
-        modal.style.display = "none";
-        if (onCancel) onCancel();
+      modal.style.display = "none";
+      if (onCancel) onCancel();
     };
-}
-   function nextQuiz() { 
-      loadQuiz();
-   }
+  }
+
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
