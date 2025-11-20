@@ -143,15 +143,15 @@
       font-size: 22px;
       min-height: 56px;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     #timer {
       text-align: center;
       margin-bottom: 12px;
-      font-size: 14px;
+      font-size: 18px;
       color: var(--accent-blue);
-      min-height: 18px;
+      min-height: 22px;
     }
 
     .quiz-buttons {
@@ -336,6 +336,8 @@
       <span id="top-name">이름: ?</span>
       &nbsp;&nbsp;
       <span id="top-score">점수: 0</span>
+      &nbsp;&nbsp;
+      <span id="top-count">진행: 0 / 100</span>
     </div>
     <div id="latest-chat">(채팅 없음)</div>
 
@@ -350,8 +352,8 @@
       <div id="timer"></div>
 
       <div class="quiz-buttons" id="quiz-buttons">
-        <button class="neon-btn neon-o" id="btnO" onclick="answer('O', event)"><i>◯</i></button>
-        <button class="neon-btn neon-x" id="btnX" onclick="answer('X', event)"><i>✕</i></button>
+        <button class="neon-btn neon-o" id="btnO" onclick="answer('O')"><i>◯</i></button>
+        <button class="neon-btn neon-x" id="btnX" onclick="answer('X')"><i>✕</i></button>
       </div>
 
       <div id="quiz-status"></div>
@@ -403,9 +405,42 @@
 </div>
 
 <script>
-  // ⚠️ 여기에 "현재 배포된 Web App URL" (exec) 넣기!
-  const API_URL = "https://script.google.com/macros/s/AKfycby7Kkn8rKVB11lQ2WMYzF0JN35ExWARWhVe4x6SCSBUAb9Jc88d_3oCyF7C2YnegKYfDQ/exec";
+  /* ★ Apps Script JSONP Web App URL ★ */
+  const API_URL = "https://script.google.com/macros/s/AKfycbxOHZ6zztNqD5s5loXdZnb3vFX86jhTSYncjKjIIO66vX8ETevLN_2tneD32dIKtddnSw/exec";
 
+  /*************** JSONP 헬퍼 ***************/
+  function jsonp(url, callback) {
+    const cbName = "cb_" + Math.random().toString(36).substring(2, 12);
+
+    const script = document.createElement("script");
+    script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cbName;
+
+    window[cbName] = function(data) {
+      try {
+        callback(data);
+      } finally {
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+    };
+
+    script.onerror = function() {
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      callback({ error: "network error" });
+    };
+
+    document.body.appendChild(script);
+  }
+
+  function api(type, params, cb) {
+    const query = new URLSearchParams(params || {});
+    query.set("type", type);
+    const url = API_URL + "?" + query.toString();
+    jsonp(url, cb);
+  }
+
+  /*************** 게임 전역 변수 ***************/
   let currentPlayerName = null;
   let currentScore = 0;
   let currentQuizId = null;
@@ -417,37 +452,6 @@
 
   let timerId = null;
   let timeLeft = 0;
-
-  /* JSONP + Promise 래퍼 */
-  function api(payload) {
-    const type = payload.type;
-    const params = { ...payload };
-    delete params.type;
-
-    return new Promise((resolve, reject) => {
-      const cbName = "cb_" + Math.random().toString(36).substring(2, 10);
-      window[cbName] = function(data) {
-        resolve(data);
-        delete window[cbName];
-        document.body.removeChild(script);
-      };
-
-      let url = API_URL + "?type=" + encodeURIComponent(type);
-      for (const key in params) {
-        url += "&" + encodeURIComponent(key) + "=" + encodeURIComponent(params[key]);
-      }
-      url += "&callback=" + cbName;
-
-      const script = document.createElement("script");
-      script.src = url;
-      script.onerror = () => {
-        reject(new Error("Network error"));
-        delete window[cbName];
-        document.body.removeChild(script);
-      };
-      document.body.appendChild(script);
-    });
-  }
 
   function clearTimer() {
     if (timerId) {
@@ -474,8 +478,8 @@
     }, 1000);
   }
 
-  /* LOGIN */
-  async function handleLogin() {
+  /*************** LOGIN ***************/
+  function handleLogin() {
     const name = document.getElementById("login-name").value.trim();
     const err  = document.getElementById("login-error");
     const btn  = document.getElementById("login-btn");
@@ -489,10 +493,14 @@
     btn.innerText = "⏳ 로딩...";
     err.textContent = "";
 
-    try {
-      const res = await api({ type: "login", name });
+    api("login", { name }, function(res) {
+      btn.disabled = false;
+      btn.innerText = "시작하기";
 
-      if (res.error) throw new Error(res.error);
+      if (!res || res.error) {
+        err.textContent = res && res.error ? res.error : "로그인 실패";
+        return;
+      }
 
       currentPlayerName = res.name;
       currentScore      = res.score || 0;
@@ -502,13 +510,14 @@
 
       document.getElementById("top-name").textContent  = "이름: " + res.name;
       document.getElementById("top-score").textContent = "점수: " + currentScore;
+      document.getElementById("top-count").textContent = "진행: " + questionCount + " / " + MAX_QUESTIONS;
 
       updatePlayers(res.players || []);
 
       document.getElementById("login-screen").style.display = "none";
       document.getElementById("wrapper").style.display      = "block";
 
-      if (gameOver || questionCount >= MAX_QUESTIONS) {
+      if (gameOver) {
         showFinishedState();
       } else {
         loadQuiz();
@@ -516,24 +525,14 @@
       loadChatLog();
 
       // 5초마다 플레이어/채팅 갱신
-      setInterval(async () => {
-        try {
-          const p = await api({ type: "getPlayers" });
-          if (!p.error) updatePlayers(p.players || []);
-        } catch (e) {
-          console.error(e);
-        }
+      setInterval(function() {
+        api("getPlayers", {}, function(p) {
+          if (p && !p.error) updatePlayers(p.players || []);
+        });
       }, 5000);
 
       setInterval(loadChatLog, 5000);
-
-    } catch (e) {
-      console.error(e);
-      err.textContent = e.message || "로그인 중 오류 발생";
-    }
-
-    btn.disabled = false;
-    btn.innerText = "시작하기";
+    });
   }
 
   function showFinishedState() {
@@ -547,13 +546,13 @@
     document.getElementById("final-message").textContent =
       currentPlayerName + "님의 최종 점수: " + currentScore + "점";
 
-    api({ type: "getPlayers" }).then(p => {
-      if (!p.error) updateFinalScoreboard(p.players || []);
+    api("getPlayers", {}, function(p) {
+      if (p && !p.error) updateFinalScoreboard(p.players || []);
     });
   }
 
-  /* QUIZ */
-  async function loadQuiz() {
+  /*************** QUIZ ***************/
+  function loadQuiz() {
     if (gameOver) return;
     if (usedQuizIds.length >= MAX_QUESTIONS) {
       endGame();
@@ -562,11 +561,14 @@
 
     clearTimer();
     document.getElementById("quiz-question").textContent = "퀴즈를 불러오는 중...";
-    document.getElementById("quiz-status").textContent = "";
+    document.getElementById("quiz-status").textContent   = "";
 
-    try {
-      const q = await api({ type: "getQuiz" });
-      if (q.error) throw new Error(q.error);
+    api("getQuiz", {}, function(q) {
+      if (!q || q.error) {
+        document.getElementById("quiz-question").textContent =
+          "퀴즈를 불러올 수 없습니다: " + (q && q.error ? q.error : "");
+        return;
+      }
 
       if (usedQuizIds.includes(q.id)) {
         // 이미 푼 문제면 다시 요청
@@ -579,27 +581,22 @@
 
       // 문제 로딩 완료 → 타이머 시작
       startTimer();
-
-    } catch (e) {
-      console.error(e);
-      document.getElementById("quiz-question").textContent =
-        "퀴즈를 불러올 수 없습니다: " + (e.message || String(e));
-    }
+    });
   }
 
   // 타임아웃 처리
-  async function handleTimeout() {
+  function handleTimeout() {
     if (!currentQuizId || isAnswering || gameOver) return;
-    await doSubmit("TIMEOUT", true);
+    doSubmit("TIMEOUT", true);
   }
 
   // 버튼 클릭
-  async function answer(choice, ev) {
+  function answer(choice) {
     if (!currentQuizId || isAnswering || gameOver) return;
-    await doSubmit(choice, false);
+    doSubmit(choice, false);
   }
 
-  async function doSubmit(choice, isTimeout) {
+  function doSubmit(choice, isTimeout) {
     isAnswering = true;
     clearTimer();
 
@@ -615,15 +612,18 @@
       createParticles(choice === "O" ? btnO : btnX);
     }
 
-    try {
-      const res = await api({
-        type: "submitAnswer",
-        name: currentPlayerName,
-        quizId: currentQuizId,
-        choice: choice
-      });
-
-      if (res.error) throw new Error(res.error);
+    api("submitAnswer", {
+      name: currentPlayerName,
+      quizId: currentQuizId,
+      choice: choice
+    }, function(res) {
+      if (!res || res.error) {
+        status.textContent = "오류: " + (res && res.error ? res.error : "");
+        btnO.disabled = false;
+        btnX.disabled = false;
+        isAnswering = false;
+        return;
+      }
 
       if (!usedQuizIds.includes(currentQuizId)) {
         usedQuizIds.push(currentQuizId);
@@ -632,8 +632,10 @@
 
       currentScore = res.newScore;
       document.getElementById("top-score").textContent = "점수: " + currentScore;
+      document.getElementById("top-count").textContent =
+        "진행: " + questionCount + " / " + MAX_QUESTIONS;
       updatePlayers(res.players || []);
-      gameOver = !!res.gameOver || (questionCount >= MAX_QUESTIONS);
+      gameOver = !!res.gameOver;
 
       const audioCorrect = document.getElementById("sound-correct");
       const audioWrong   = document.getElementById("sound-wrong");
@@ -652,7 +654,7 @@
         audioWrong.play();
       }
 
-      setTimeout(() => {
+      setTimeout(function() {
         btnO.classList.remove("correct-glow", "wrong-shake");
         btnX.classList.remove("correct-glow", "wrong-shake");
         btnO.disabled = false;
@@ -662,19 +664,11 @@
           endGame();
           isAnswering = false;
         } else {
-          // 계속할지 물어보기
           askNextStep();
           isAnswering = false;
         }
       }, 900);
-
-    } catch (e) {
-      console.error(e);
-      status.textContent = "오류: " + (e.message || String(e));
-      btnO.disabled = false;
-      btnX.disabled = false;
-      isAnswering = false;
-    }
+    });
   }
 
   function askNextStep() {
@@ -701,23 +695,23 @@
     document.getElementById("final-message").textContent =
       currentPlayerName + "님의 최종 점수: " + currentScore + "점";
 
-    api({ type: "getPlayers" }).then(p => {
-      if (!p.error) updateFinalScoreboard(p.players || []);
+    api("getPlayers", {}, function(p) {
+      if (p && !p.error) updateFinalScoreboard(p.players || []);
     });
   }
 
   function updateFinalScoreboard(players) {
     const ul = document.getElementById("final-score-list");
     ul.innerHTML = "";
-    players.sort((a, b) => b.score - a.score);
-    players.forEach(p => {
+    players.sort(function(a, b) { return b.score - a.score; });
+    players.forEach(function(p) {
       const li = document.createElement("li");
-      li.innerHTML = `<span>${p.name}</span><span>${p.score}점</span>`;
+      li.innerHTML = "<span>" + p.name + "</span><span>" + p.score + "점</span>";
       ul.appendChild(li);
     });
   }
 
-  /* 파티클 */
+  /*************** PARTICLES ***************/
   function createParticles(btn) {
     const rect = btn.getBoundingClientRect();
     for (let i = 0; i < 10; i++) {
@@ -732,11 +726,11 @@
       p.style.left = rect.width / 2 + "px";
       p.style.top  = rect.height / 2 + "px";
       btn.appendChild(p);
-      setTimeout(() => btn.removeChild(p), 600);
+      setTimeout(function() { if (p.parentNode) btn.removeChild(p); }, 600);
     }
   }
 
-  /* 탭 전환 */
+  /*************** 탭 전환 ***************/
   function switchTab(tab) {
     const storePanel = document.getElementById("store-panel");
     const chatPanel  = document.getElementById("chat-panel");
@@ -756,24 +750,24 @@
     }
   }
 
-  /* 플레이어 리스트 */
+  /*************** PLAYERS ***************/
   function updatePlayers(players) {
     const list     = document.getElementById("players-list");
     const minusSel = document.getElementById("minus-target");
     const plusSel  = document.getElementById("plus-target");
 
-    list.innerHTML     = "";
+    list.innerHTML = "";
     minusSel.innerHTML = "";
     plusSel.innerHTML  = "";
 
-    players.sort((a, b) => b.score - a.score);
+    players.sort(function(a, b) { return b.score - a.score; });
 
-    players.forEach((p, index) => {
+    players.forEach(function(p, index) {
       const row = document.createElement("div");
       row.className = "player-row";
       if (index === 0) row.classList.add("first-place");
 
-      row.innerHTML = `<span>${p.name}</span><span>${p.score}점</span>`;
+      row.innerHTML = "<span>" + p.name + "</span><span>" + p.score + "점</span>";
       list.appendChild(row);
 
       if (p.name !== currentPlayerName) {
@@ -794,13 +788,13 @@
     }
   }
 
-  /* 상점 */
-  async function useShop(type) {
+  /*************** SHOP ***************/
+  function useShop(type) {
     const msgEl    = document.getElementById("store-message");
     const minusSel = document.getElementById("minus-target");
     const plusSel  = document.getElementById("plus-target");
 
-    const target = type === "minus" ? minusSel.value : plusSel.value;
+    const target = (type === "minus" ? minusSel.value : plusSel.value);
     if (!target) {
       msgEl.textContent = "대상 선택 필요!";
       return;
@@ -808,64 +802,56 @@
 
     msgEl.textContent = "처리 중...";
 
-    try {
-      const res = await api({
-        type: "useShop",
-        fromName: currentPlayerName,
-        toName: target,
-        mode: type
-      });
-
-      if (res.error) throw new Error(res.error);
+    api("useShop", {
+      fromName: currentPlayerName,
+      toName: target,
+      mode: type
+    }, function(res) {
+      if (!res || res.error) {
+        msgEl.textContent = res && res.error ? res.error : "오류";
+        return;
+      }
 
       currentScore = res.fromScore;
       document.getElementById("top-score").textContent = "점수: " + currentScore;
       updatePlayers(res.players || []);
 
       msgEl.textContent =
-        type === "minus"
-          ? `${res.toName}의 점수를 -1 했습니다!`
-          : `${res.toName}에게 +1 선물했습니다!`;
-
-    } catch (e) {
-      console.error(e);
-      msgEl.textContent = e.message || String(e);
-    }
+        (type === "minus")
+          ? (res.toName + "의 점수를 -1 했습니다!")
+          : (res.toName + "에게 +1 선물했습니다!");
+    });
   }
 
-  /* 채팅 */
-  async function sendChat() {
+  /*************** CHAT ***************/
+  function sendChat() {
     const input = document.getElementById("chat-input");
     const msg   = input.value.trim();
     if (!msg) return;
 
-    await api({
-      type: "chatSend",
+    api("chatSend", {
       name: currentPlayerName,
       message: msg
+    }, function() {
+      input.value = "";
+      loadChatLog();
     });
-
-    input.value = "";
-    loadChatLog();
   }
 
-  async function loadChatLog() {
-    try {
-      const res = await api({ type: "chatList", limit: 30 });
-      const log = Array.isArray(res) ? res : (res.list || []);
+  function loadChatLog() {
+    api("chatList", { limit: 30 }, function(res) {
+      const log = Array.isArray(res) ? res : (res && res.list ? res.list : []);
 
       renderChatLog(log);
 
-      if (log.length > 0) {
+      if (log && log.length > 0) {
         const last = log[log.length - 1];
         document.getElementById("latest-chat").textContent =
-          `${last.name}: ${last.message}`;
+          last.name + ": " + last.message;
       } else {
         document.getElementById("latest-chat").textContent = "(채팅 없음)";
       }
-    } catch (e) {
-      console.error(e);
-    }
+    });
   }
 
   function renderChatLog(log) {
@@ -877,9 +863,9 @@
       return;
     }
 
-    log.forEach(row => {
+    log.forEach(function(row) {
       const div = document.createElement("div");
-      div.textContent = `${row.name}: ${row.message}`;
+      div.textContent = row.name + ": " + row.message;
       chatEl.appendChild(div);
     });
 
@@ -889,4 +875,3 @@
 
 </body>
 </html>
-
