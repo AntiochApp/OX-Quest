@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>OX Quiz – Neon Black</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #000000;
+      --panel-dark: #12121a;
+      --accent-blue: #00eaff;
+      --accent-purple: #9b5cff;
+      --text-main: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+    }
+
+    /* LOGIN */
+    #login-screen {
+      max-width: 420px;
+      margin: 120px auto;
+      padding: 30px 24px 36px;
+      text-align: center;
+      background: #050509;
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.9);
+      border: 1px solid #222;
+    }
+    #login-screen h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 26px;
+      margin-bottom: 14px;
+      color: var(--accent-blue);
+      text-shadow: 0 0 10px var(--accent-blue);
+    }
+    .login-input {
+      width: 90%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #444;
+      background: #111;
+      color: #fff;
+      margin-bottom: 14px;
+      font-size: 15px;
+    }
+    #login-btn {
+      width: 70%;
+      padding: 11px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent-blue), #0066ff);
+      color: #000;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 0 15px var(--accent-blue);
+    }
+    #login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #login-error {
+      color: #ff4b9f;
+      margin-top: 8px;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    /* MAIN WRAPPER */
+    #wrapper {
+      max-width: 1200px;
+      margin: 16px auto;
+      padding: 0 8px 16px;
+      display: none;
+    }
+
+    /* TOP BAR */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: #111119;
+      border-radius: 10px;
+      border: 1px solid #333;
+    }
+    #top-info {
+      flex: 1;
+      font-size: 14px;
+    }
+    #latest-chat {
+      flex: 2;
+      text-align: center;
+      font-size: 13px;
+      color: var(--accent-blue);
+      min-height: 18px;
+    }
+
+    .tab-btn {
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background: #222;
+      color: #ddd;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      margin-left: 6px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #555;
+      color: #fff;
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 8px rgba(155,92,255,0.7);
+    }
+
+    /* MAIN GRID */
+    .main {
+      display: flex;
+      margin-top: 14px;
+      gap: 14px;
+    }
+
+    /* QUIZ */
+    .quiz-area {
+      flex: 2.5;
+      padding: 24px 20px 28px;
+      background: #08080f;
+      border-radius: 12px;
+      border: 1px solid #29293a;
+    }
+    .quiz-question {
+      font-size: 22px;
+      min-height: 56px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .quiz-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 26px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: visible;
+    }
+
+    .neon-btn {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+      font-family: 'Orbitron', sans-serif;
+      color: #fff;
+      text-shadow: 0 0 10px #fff;
+      transition: 0.15s;
+      overflow: hidden;
+    }
+    .neon-o {
+      background: radial-gradient(circle, var(--accent-blue), #0077ff);
+      box-shadow: 0 0 20px var(--accent-blue);
+    }
+    .neon-x {
+      background: radial-gradient(circle, #ff0099, #b3005a);
+      box-shadow: 0 0 20px #ff0099aa;
+    }
+    .neon-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* 파티클 */
+    .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      animation: particle-pop 0.6s ease-out forwards;
+    }
+    @keyframes particle-pop {
+      0% { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+    }
+
+    /* 정답/오답 */
+    @keyframes correctGlow {
+      0% { box-shadow: 0 0 8px #00ff88; }
+      50% { box-shadow: 0 0 32px #00ff88; }
+      100% { box-shadow: 0 0 8px #00ff88; }
+    }
+    @keyframes wrongShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+      100% { transform: translateX(0); }
+    }
+    .correct-glow { animation: correctGlow 0.7s ease-out; }
+    .wrong-shake { animation: wrongShake 0.4s ease-out; }
+
+    #quiz-status {
+      text-align: center;
+      min-height: 22px;
+      font-size: 16px;
+    }
+
+    /* GAME END */
+    #final-scoreboard {
+      display: none;
+      margin-top: 12px;
+      border-top: 1px solid #333;
+      padding-top: 10px;
+      font-size: 16px;
+    }
+    #final-scoreboard li {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid #222;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel {
+      background: #090912;
+      border-radius: 10px;
+      border: 1px solid #29293a;
+      padding: 10px 10px 12px;
+      font-size: 13px;
+    }
+
+    .players-list .player-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 2px;
+      border-bottom: 1px solid #1f1f2a;
+      font-size: 13px;
+    }
+    .first-place {
+      color: var(--accent-blue);
+      font-weight: 600;
+      text-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    /* CHAT PANEL */
+    .chat-log {
+      height: 150px;
+      overflow-y: auto;
+      background: #050508;
+      border-radius: 6px;
+      padding: 6px;
+      border: 1px solid #262636;
+      font-size: 12px;
+    }
+    .chat-input-box {
+      display: flex;
+      margin-top: 8px;
+      gap: 4px;
+    }
+    .chat-input-box input {
+      flex: 1;
+      padding: 7px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #111;
+      color: #fff;
+    }
+    .chat-input-box button {
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: none;
+      background: var(--accent-blue);
+      color: #000;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      #wrapper { max-width: 100%; }
+      .main { flex-direction: column; }
+      .neon-btn { width: 90px; height: 90px; font-size: 44px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 사운드 -->
+<audio id="sound-correct" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d9c06b9b1.mp3?filename=correct-2-46134.mp3"></audio>
+<audio id="sound-wrong"   src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3030a63a70.mp3?filename=error-126627.mp3"></audio>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <h1>OX QUIZ GAME</h1>
+  <input id="login-name" class="login-input" placeholder="이름을 입력하세요" />
+  <button id="login-btn" onclick="handleLogin()">시작하기</button>
+  <div id="login-error"></div>
+</div>
+
+<!-- GAME WRAPPER -->
+<div id="wrapper">
+  <div class="top-bar">
+    <div id="top-info">
+      <span id="top-name">이름: ?</span>
+      &nbsp;&nbsp;
+      <span id="top-score">점수: 0</span>
+    </div>
+    <div id="latest-chat">(채팅 없음)</div>
+
+    <button class="tab-btn active" id="tab-store" onclick="switchTab('store')">상점</button>
+    <button class="tab-btn" id="tab-chat" onclick="switchTab('chat')">채팅</button>
+  </div>
+
+  <div class="main">
+    <!-- QUIZ -->
+    <div class="quiz-area">
+      <div class="quiz-question" id="quiz-question">퀴즈를 불러오는 중...</div>
+
+      <div class="quiz-buttons" id="quiz-buttons">
+        <button class="neon-btn neon-o" id="btnO" onclick="answer('O', event)"><i>◯</i></button>
+        <button class="neon-btn neon-x" id="btnX" onclick="answer('X', event)"><i>✕</i></button>
+      </div>
+
+      <div id="quiz-status"></div>
+
+      <div id="final-scoreboard">
+        <h3>최종 점수판</h3>
+        <p id="final-message"></p>
+        <ul id="final-score-list"></ul>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- STORE -->
+      <div class="panel" id="store-panel">
+        <h3>상점</h3>
+        <p>내 1점 사용 → 선택한 사람 -1점</p>
+        <select id="minus-target"></select>
+        <button onclick="useShop('minus')">-1점 사용</button>
+        <br><br>
+
+        <p>내 1점 사용 → 선택한 사람 +1점</p>
+        <select id="plus-target"></select>
+        <button onclick="useShop('plus')">+1점 주기</button>
+
+        <div id="store-message" style="margin-top:8px; color:#9b5cff"></div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="panel" id="chat-panel" style="display:none;">
+        <h3>채팅</h3>
+        <div class="chat-log" id="chat-log"></div>
+
+        <div class="chat-input-box">
+          <input id="chat-input" placeholder="메시지 입력" />
+          <button onclick="sendChat()">전송</button>
+        </div>
+      </div>
+
+      <!-- PLAYERS -->
+      <div class="panel players-list">
+        <h3>플레이어</h3>
+        <div id="players-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ✅ 현재 Web App 배포 URL로 바꿔도 되고, 지금 것 그대로 써도 됨
+  const API_URL = "https://script.google.com/macros/s/AKfycbxOHZ6zztNqD5s5loXdZnb3vFX86jhTSYncjKjIIO66vX8ETevLN_2tneD32dIKtddnSw/exec";
+
+  let currentPlayerName = null;
+  let currentScore = 0;
+  let currentQuizId = null;
+  let usedQuizIds = [];
+  let questionCount = 0;
+  const MAX_QUESTIONS = 100;
+  let gameOver = false;
+  let isAnswering = false;
+
+  /* 공통 API 호출 함수 */
+  async function api(payload) {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
+
+  /* LOGIN */
+  async function handleLogin() {
+    const name = document.getElementById("login-name").value.trim();
+    const err = document.getElementById("login-error");
+    const btn = document.getElementById("login-btn");
+
+    if (!name) {
+      err.textContent = "이름을 입력하세요.";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "⏳ 로딩...";
+    err.textContent = "";
+
+    try {
+      const res = await api({ type: "login", name });
+
+      if (res.error) throw new Error(res.error);
+
+      currentPlayerName = res.name;
+      currentScore = res.score;
+
+      document.getElementById("top-name").textContent  = "이름: " + res.name;
+      document.getElementById("top-score").textContent = "점수: " + res.score;
+
+      updatePlayers(res.players);
+
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("wrapper").style.display = "block";
+
+      loadQuiz();
+      loadChatLog();
+
+      // 5초마다 플레이어/채팅 갱신
+      setInterval(async () => {
+        const p = await api({ type: "getPlayers" });
+        updatePlayers(p.players || []);
+      }, 5000);
+
+      setInterval(loadChatLog, 5000);
+
+    } catch (e) {
+      err.textContent = e.message || String(e);
+    }
+
+    btn.disabled = false;
+    btn.innerText = "시작하기";
+  }
+
+  /* QUIZ */
+  async function loadQuiz() {
+    if (gameOver) return;
+    if (usedQuizIds.length >= MAX_QUESTIONS) {
+      endGame();
+      return;
+    }
+
+    document.getElementById("quiz-question").textContent = "퀴즈를 불러오는 중...";
+
+    try {
+      const q = await api({ type: "getQuiz" });
+      if (q.error) throw new Error(q.error);
+
+      if (usedQuizIds.includes(q.id)) {
+        loadQuiz();
+        return;
+      }
+      currentQuizId = q.id;
+      document.getElementById("quiz-question").textContent = q.question;
+    } catch (e) {
+      document.getElementById("quiz-question").textContent =
+        "퀴즈를 불러올 수 없습니다: " + (e.message || String(e));
+    }
+  }
+
+  async function answer(choice, ev) {
+    if (!currentQuizId || isAnswering || gameOver) return;
+    isAnswering = true;
+
+    const status = document.getElementById("quiz-status");
+    const btnO = document.getElementById("btnO");
+    const btnX = document.getElementById("btnX");
+
+    status.textContent = "⏳ 채점 중...";
+    btnO.disabled = true;
+    btnX.disabled = true;
+
+    createParticles(choice === "O" ? btnO : btnX);
+
+    try {
+      const res = await api({
+        type: "submitAnswer",
+        name: currentPlayerName,
+        quizId: currentQuizId,
+        choice
+      });
+
+      if (res.error) throw new Error(res.error);
+
+      if (!usedQuizIds.includes(currentQuizId)) {
+        usedQuizIds.push(currentQuizId);
+      }
+      questionCount++;
+
+      currentScore = res.newScore;
+      document.getElementById("top-score").textContent = "점수: " + currentScore;
+      updatePlayers(res.players || []);
+
+      const audioCorrect = document.getElementById("sound-correct");
+      const audioWrong   = document.getElementById("sound-wrong");
+
+      if (res.isCorrect) {
+        status.textContent = "정답!";
+        (choice === "O" ? btnO : btnX).classList.add("correct-glow");
+        audioCorrect.currentTime = 0;
+        audioCorrect.play();
+      } else {
+        status.textContent = "오답!";
+        (choice === "O" ? btnO : btnX).classList.add("wrong-shake");
+        audioWrong.currentTime = 0;
+        audioWrong.play();
+      }
+
+      setTimeout(() => {
+        btnO.classList.remove("correct-glow", "wrong-shake");
+        btnX.classList.remove("correct-glow", "wrong-shake");
+        btnO.disabled = false;
+        btnX.disabled = false;
+
+        if (questionCount >= MAX_QUESTIONS) {
+          endGame();
+        } else {
+          status.textContent = "";
+          loadQuiz();
+        }
+        isAnswering = false;
+      }, 900);
+
+    } catch (e) {
+      status.textContent = "오류: " + (e.message || String(e));
+      btnO.disabled = false;
+      btnX.disabled = false;
+      isAnswering = false;
+    }
+  }
+
+  function endGame() {
+    gameOver = true;
+    document.getElementById("quiz-question").textContent =
+      "게임 종료! 총 " + questionCount + "문제를 풀었습니다.";
+    document.getElementById("quiz-buttons").style.display = "none";
+    document.getElementById("quiz-status").textContent = "상점은 계속 사용할 수 있습니다.";
+    document.getElementById("final-scoreboard").style.display = "block";
+
+    // 최종 점수판은 5초마다 getPlayers로 갱신되므로 여기서는 메시지만
+    document.getElementById("final-message").textContent =
+      currentPlayerName + "님의 최종 점수: " + currentScore + "점";
+
+    api({ type: "getPlayers" }).then(p => {
+      updateFinalScoreboard(p.players || []);
+    });
+  }
+
+  function updateFinalScoreboard(players) {
+    const ul = document.getElementById("final-score-list");
+    ul.innerHTML = "";
+    players.sort((a, b) => b.score - a.score);
+    players.forEach(p => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span>${p.name}</span><span>${p.score}점</span>`;
+      ul.appendChild(li);
+    });
+  }
+
+  /* PARTICLES */
+  function createParticles(btn) {
+    const rect = btn.getBoundingClientRect();
+    for (let i = 0; i < 10; i++) {
+      const p = document.createElement("span");
+      p.className = "particle";
+      const angle = Math.random() * 2 * Math.PI;
+      const distance = 40 + Math.random() * 20;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance;
+      p.style.setProperty("--dx", dx + "px");
+      p.style.setProperty("--dy", dy + "px");
+      p.style.left = rect.width / 2 + "px";
+      p.style.top  = rect.height / 2 + "px";
+      btn.appendChild(p);
+      setTimeout(() => btn.removeChild(p), 600);
+    }
+  }
+
+  /* TABS */
+  function switchTab(tab) {
+    const storePanel = document.getElementById("store-panel");
+    const chatPanel  = document.getElementById("chat-panel");
+    const tabStore   = document.getElementById("tab-store");
+    const tabChat    = document.getElementById("tab-chat");
+
+    if (tab === "store") {
+      storePanel.style.display = "block";
+      chatPanel.style.display  = "none";
+      tabStore.classList.add("active");
+      tabChat.classList.remove("active");
+    } else {
+      storePanel.style.display = "none";
+      chatPanel.style.display  = "block";
+      tabStore.classList.remove("active");
+      tabChat.classList.add("active");
+    }
+  }
+
+  /* PLAYERS */
+  function updatePlayers(players) {
+    const list    = document.getElementById("players-list");
+    const minusSel = document.getElementById("minus-target");
+    const plusSel  = document.getElementById("plus-target");
+
+    list.innerHTML = "";
+    minusSel.innerHTML = "";
+    plusSel.innerHTML  = "";
+
+    players.sort((a, b) => b.score - a.score);
+
+    players.forEach((p, index) => {
+      const row = document.createElement("div");
+      row.className = "player-row";
+      if (index === 0) row.classList.add("first-place");
+
+      row.innerHTML = `<span>${p.name}</span><span>${p.score}점</span>`;
+      list.appendChild(row);
+
+      if (p.name !== currentPlayerName) {
+        const opt1 = document.createElement("option");
+        opt1.value = p.name;
+        opt1.textContent = p.name;
+        minusSel.appendChild(opt1);
+
+        const opt2 = document.createElement("option");
+        opt2.value = p.name;
+        opt2.textContent = p.name;
+        plusSel.appendChild(opt2);
+      }
+    });
+
+    // 최종 점수판도 같이 갱신
+    if (gameOver) {
+      updateFinalScoreboard(players);
+    }
+  }
+
+  /* SHOP */
+  async function useShop(type) {
+    const msgEl   = document.getElementById("store-message");
+    const minusSel = document.getElementById("minus-target");
+    const plusSel  = document.getElementById("plus-target");
+
+    const target = type === "minus" ? minusSel.value : plusSel.value;
+    if (!target) {
+      msgEl.textContent = "대상 선택 필요!";
+      return;
+    }
+
+    msgEl.textContent = "처리 중...";
+
+    try {
+      const res = await api({
+        type: "useShop",
+        fromName: currentPlayerName,
+        toName: target,
+        mode: type
+      });
+
+      if (res.error) throw new Error(res.error);
+
+      currentScore = res.fromScore;
+      document.getElementById("top-score").textContent = "점수: " + currentScore;
+      updatePlayers(res.players || []);
+
+      msgEl.textContent =
+        type === "minus"
+          ? `${res.toName}의 점수를 -1 했습니다!`
+          : `${res.toName}에게 +1 선물했습니다!`;
+
+    } catch (e) {
+      msgEl.textContent = e.message || String(e);
+    }
+  }
+
+  /* CHAT */
+  async function sendChat() {
+    const input = document.getElementById("chat-input");
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    await api({
+      type: "chatSend",
+      name: currentPlayerName,
+      message: msg
+    });
+
+    input.value = "";
+    loadChatLog();
+  }
+
+  async function loadChatLog() {
+    try {
+      const res = await api({ type: "chatList", limit: 30 });
+      const log = Array.isArray(res) ? res : (res.list || []);
+
+      renderChatLog(log);
+
+      if (log.length > 0) {
+        const last = log[log.length - 1];
+        document.getElementById("latest-chat").textContent =
+          `${last.name}: ${last.message}`;
+      } else {
+        document.getElementById("latest-chat").textContent = "(채팅 없음)";
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderChatLog(log) {
+    const chatEl = document.getElementById("chat-log");
+    chatEl.innerHTML = "";
+
+    if (!log || log.length === 0) {
+      chatEl.innerHTML = "<div style='color:#666;'>채팅 없음</div>";
+      return;
+    }
+
+    log.forEach(row => {
+      const div = document.createElement("div");
+      div.textContent = `${row.name}: ${row.message}`;
+      chatEl.appendChild(div);
+    });
+
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+</script>
+
+</body>
+</html>
