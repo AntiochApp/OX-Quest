@@ -22,21 +22,16 @@ body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
 
-  /* 네온 감성 배경 */
   background: radial-gradient(circle at 50% 20%, #1a1f3c 0%, #090b19 40%, #000000 80%),
               radial-gradient(circle at bottom, #0d0f1f 0%, #000000 70%);
   background-blend-mode: screen;
 
-  /* flex 제거 — wrapper가 바닥으로 떨어지는 문제 해결 */
   min-height: 100vh;
-}
 
-/* login-screen만 화면 중앙 정렬 */
-#login-screen {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column; /* 세로정렬 */
+  justify-content: center; /* 수직 중앙 */
+  align-items: center; /* 수평 중앙 */
 }
     /* LOGIN */
 #login-screen {
@@ -986,6 +981,7 @@ body {
 
 </body>
 </html>
+
 
 
 
