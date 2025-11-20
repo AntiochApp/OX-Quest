@@ -313,6 +313,75 @@
       .main { flex-direction: column; }
       .neon-btn { width: 90px; height: 90px; font-size: 44px; }
     }
+
+    .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: #0d0d0f;
+    padding: 30px 40px;
+    border-radius: 18px;
+    text-align: center;
+    width: 350px;
+    box-shadow: 0 0 30px rgba(0,255,255,0.4);
+    border: 2px solid rgba(0,255,255,0.35);
+    animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.modal-content p {
+    font-size: 18px;
+    margin-bottom: 25px;
+    color: #eaffff;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.modal-buttons button {
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #fff;
+    transition: 0.2s;
+}
+
+#modalOk {
+    background: rgba(0,200,255,0.8);
+    box-shadow: 0 0 15px rgba(0,255,255,0.7);
+}
+
+#modalCancel {
+    background: rgba(255,70,120,0.75);
+    box-shadow: 0 0 15px rgba(255,70,120,0.7);
+}
+
+#modalOk:hover {
+    background: rgba(0,255,255,1);
+}
+
+#modalCancel:hover {
+    background: rgba(255,70,120,1);
+}
   </style>
 </head>
 <body>
@@ -399,10 +468,15 @@
         <h3>플레이어</h3>
         <div id="players-list"></div>
       </div>
-
+    <div id="neonModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <div class="modal-buttons">
+                <button id="modalOk">확인</button>
+                <button id="modalCancel">취소</button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
 <script>
   /* ★ Apps Script JSONP Web App URL ★ */
@@ -672,15 +746,16 @@
   }
 
   function askNextStep() {
-    const goOn = confirm("이번 문제를 풀었습니다.\n다음 문제로 계속 진행할까요?");
-    if (goOn) {
-      loadQuiz();
-    } else {
+  showNeonConfirm(
+    "이번 문제를 풀었습니다.\n다음 문제로 계속 진행할까요?",
+    () => nextQuiz(),  // 확인
+    () => {
       document.getElementById("quiz-status").textContent =
         "일시 정지되었습니다. 나중에 다시 로그인하면 이어서 할 수 있어요.";
       clearTimer();
     }
-  }
+  );
+}
 
   function endGame() {
     gameOver = true;
@@ -871,7 +946,24 @@
 
     chatEl.scrollTop = chatEl.scrollHeight;
   }
+  function showNeonConfirm(message, onOk, onCancel) {
+    document.getElementById("modalMessage").innerText = message;
+
+    const modal = document.getElementById("neonModal");
+    modal.style.display = "flex";
+
+    document.getElementById("modalOk").onclick = () => {
+        modal.style.display = "none";
+        if (onOk) onOk();
+    };
+
+    document.getElementById("modalCancel").onclick = () => {
+        modal.style.display = "none";
+        if (onCancel) onCancel();
+    };
+}
 </script>
 
 </body>
 </html>
+
