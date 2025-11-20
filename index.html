@@ -21,22 +21,23 @@
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  
+
   /* 네온 감성 배경 */
   background: radial-gradient(circle at 50% 20%, #1a1f3c 0%, #090b19 40%, #000000 80%),
               radial-gradient(circle at bottom, #0d0f1f 0%, #000000 70%);
   background-blend-mode: screen;
 
-  /* ★ 화면 가운데 정렬 핵심! (중앙에 위치시키기) */
+  /* flex 제거 — wrapper가 바닥으로 떨어지는 문제 해결 */
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;   /* ← 여기! center 추천 */
-
-  padding-top: 0; /* center 쓰면 패딩 필요 없음 */
 }
 
+/* login-screen만 화면 중앙 정렬 */
+#login-screen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
     /* LOGIN */
 #login-screen {
     max-width: 420px;
@@ -985,6 +986,7 @@ body {
 
 </body>
 </html>
+
 
 
 
