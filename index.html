@@ -1168,24 +1168,29 @@
 
   /*************** 네온 확인 모달 ***************/
   function showNeonConfirm(message, onOk, onCancel) {
-    document.getElementById("modalMessage").innerText = message;
+  document.getElementById("modalMessage").innerText = message;
 
-    const modal = document.getElementById("neonModal");
-    modal.style.display = "flex";
+  const modal = document.getElementById("neonModal");
+  modal.style.display = "flex";
 
-    document.getElementById("modalOk").onclick = () => {
-      modal.style.display = "none";
-      if (onOk) onOk();
-    };
+  document.getElementById("modalOk").onclick = () => {
+    modal.style.display = "none";
+    if (onOk) onOk();
+  };
 
-    document.getElementById("modalCancel").onclick = () => {
-      modal.style.display = "none";
-      if (onCancel) onCancel();
-    };
-  }
+  document.getElementById("modalCancel").onclick = () => {
+    modal.style.display = "none";
+    if (onCancel) onCancel();
+  };
+}
 
+/*************** 반드시 있어야 하는 nextQuiz 함수 ***************/
+function nextQuiz() {
+  loadQuiz();
+}
 </script>
 
 </body>
 </html>
+
 
