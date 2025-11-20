@@ -21,7 +21,7 @@
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
-      background: var(--bg-dark);
+      background: radial-gradient(circle at top, #14182b 0, #000 45%);
       color: var(--text-main);
     }
 
@@ -143,15 +143,7 @@
       font-size: 22px;
       min-height: 56px;
       text-align: center;
-      margin-bottom: 10px;
-    }
-
-    #timer {
-      text-align: center;
-      margin-bottom: 12px;
-      font-size: 14px;
-      color: var(--accent-blue);
-      min-height: 18px;
+      margin-bottom: 20px;
     }
 
     .quiz-buttons {
@@ -208,7 +200,7 @@
       100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
     }
 
-    /* 정답/오답 */
+    /* 정답/오답 애니메이션 */
     @keyframes correctGlow {
       0% { box-shadow: 0 0 8px #00ff88; }
       50% { box-shadow: 0 0 32px #00ff88; }
@@ -228,7 +220,6 @@
       text-align: center;
       min-height: 22px;
       font-size: 16px;
-      margin-top: 4px;
     }
 
     /* GAME END */
@@ -347,7 +338,6 @@
     <!-- QUIZ -->
     <div class="quiz-area">
       <div class="quiz-question" id="quiz-question">퀴즈를 불러오는 중...</div>
-      <div id="timer"></div>
 
       <div class="quiz-buttons" id="quiz-buttons">
         <button class="neon-btn neon-o" id="btnO" onclick="answer('O', event)"><i>◯</i></button>
@@ -403,7 +393,7 @@
 </div>
 
 <script>
-  // ⚠️ 여기에 "현재 배포된 Web App URL" 넣기!
+  // 🔴 여기에 너의 Apps Script Web App "exec" URL 붙여넣기!
   const API_URL = "https://script.google.com/macros/s/AKfycbxOHZ6zztNqD5s5loXdZnb3vFX86jhTSYncjKjIIO66vX8ETevLN_2tneD32dIKtddnSw/exec";
 
   let currentPlayerName = null;
@@ -415,50 +405,26 @@
   let gameOver = false;
   let isAnswering = false;
 
-  let timerId = null;
-  let timeLeft = 0;
-
-  /* 공통 API 호출 함수 */
-async function api(payload) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-
-  const text = await res.text();
-  return JSON.parse(text);
-}
-
-  function clearTimer() {
-    if (timerId) {
-      clearInterval(timerId);
-      timerId = null;
+  /* 공통 API 호출 (preflight 방지: Content-Type 설정 안 함!) */
+  async function api(payload) {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error("API JSON parse error:", text);
+      return { error: "invalid response" };
     }
-    document.getElementById("timer").textContent = "";
-  }
-
-  function startTimer() {
-    clearTimer();
-    timeLeft = 20;
-    const timerEl = document.getElementById("timer");
-    timerEl.textContent = "남은 시간: " + timeLeft + "초";
-
-    timerId = setInterval(() => {
-      timeLeft--;
-      if (timeLeft <= 0) {
-        clearTimer();
-        handleTimeout();
-      } else {
-        timerEl.textContent = "남은 시간: " + timeLeft + "초";
-      }
-    }, 1000);
   }
 
   /* LOGIN */
   async function handleLogin() {
     const name = document.getElementById("login-name").value.trim();
-    const err = document.getElementById("login-error");
-    const btn = document.getElementById("login-btn");
+    const err  = document.getElementById("login-error");
+    const btn  = document.getElementById("login-btn");
 
     if (!name) {
       err.textContent = "이름을 입력하세요.";
@@ -473,58 +439,37 @@ async function api(payload) {
       const res = await api({ type: "login", name });
 
       if (res.error) throw new Error(res.error);
+      if (!res.ok && !res.name) throw new Error("로그인 실패");
 
       currentPlayerName = res.name;
-      currentScore = res.score;
-      usedQuizIds = Array.isArray(res.usedIds) ? res.usedIds : [];
-      questionCount = res.count || 0;
-      gameOver = !!res.gameOver;
+      currentScore      = res.score || 0;
 
       document.getElementById("top-name").textContent  = "이름: " + res.name;
-      document.getElementById("top-score").textContent = "점수: " + res.score;
+      document.getElementById("top-score").textContent = "점수: " + currentScore;
 
       updatePlayers(res.players || []);
 
       document.getElementById("login-screen").style.display = "none";
-      document.getElementById("wrapper").style.display = "block";
+      document.getElementById("wrapper").style.display      = "block";
 
-      if (gameOver) {
-        showFinishedState();
-      } else {
-        loadQuiz();
-      }
+      loadQuiz();
       loadChatLog();
 
       // 5초마다 플레이어/채팅 갱신
       setInterval(async () => {
         const p = await api({ type: "getPlayers" });
-        updatePlayers(p.players || []);
+        if (!p.error) updatePlayers(p.players || []);
       }, 5000);
 
       setInterval(loadChatLog, 5000);
 
     } catch (e) {
-      err.textContent = e.message || String(e);
+      console.error(e);
+      err.textContent = e.message || "로그인 중 오류 발생";
     }
 
     btn.disabled = false;
     btn.innerText = "시작하기";
-  }
-
-  function showFinishedState() {
-    clearTimer();
-    document.getElementById("quiz-question").textContent =
-      "이미 게임을 모두 완료했습니다. (총 " + questionCount + "문제)";
-    document.getElementById("quiz-buttons").style.display = "none";
-    document.getElementById("quiz-status").textContent = "상점은 계속 사용할 수 있습니다.";
-    document.getElementById("final-scoreboard").style.display = "block";
-
-    document.getElementById("final-message").textContent =
-      currentPlayerName + "님의 최종 점수: " + currentScore + "점";
-
-    api({ type: "getPlayers" }).then(p => {
-      updateFinalScoreboard(p.players || []);
-    });
   }
 
   /* QUIZ */
@@ -535,66 +480,46 @@ async function api(payload) {
       return;
     }
 
-    clearTimer();
     document.getElementById("quiz-question").textContent = "퀴즈를 불러오는 중...";
-    document.getElementById("quiz-status").textContent = "";
 
     try {
       const q = await api({ type: "getQuiz" });
       if (q.error) throw new Error(q.error);
 
       if (usedQuizIds.includes(q.id)) {
-        // 이미 푼 문제면 다시 요청
         loadQuiz();
         return;
       }
-
       currentQuizId = q.id;
       document.getElementById("quiz-question").textContent = q.question;
 
-      // 문제 로딩 완료 → 타이머 시작
-      startTimer();
-
     } catch (e) {
+      console.error(e);
       document.getElementById("quiz-question").textContent =
         "퀴즈를 불러올 수 없습니다: " + (e.message || String(e));
     }
   }
 
-  // 타임아웃 처리
-  async function handleTimeout() {
-    if (!currentQuizId || isAnswering || gameOver) return;
-    await doSubmit("TIMEOUT", true);
-  }
-
-  // 버튼 클릭
   async function answer(choice, ev) {
     if (!currentQuizId || isAnswering || gameOver) return;
-    await doSubmit(choice, false);
-  }
-
-  async function doSubmit(choice, isTimeout) {
     isAnswering = true;
-    clearTimer();
 
     const status = document.getElementById("quiz-status");
-    const btnO = document.getElementById("btnO");
-    const btnX = document.getElementById("btnX");
+    const btnO   = document.getElementById("btnO");
+    const btnX   = document.getElementById("btnX");
 
-    status.textContent = isTimeout ? "⏰ 시간 초과 처리 중..." : "⏳ 채점 중...";
+    status.textContent = "⏳ 채점 중...";
     btnO.disabled = true;
     btnX.disabled = true;
 
-    if (!isTimeout) {
-      createParticles(choice === "O" ? btnO : btnX);
-    }
+    createParticles(choice === "O" ? btnO : btnX);
 
     try {
       const res = await api({
         type: "submitAnswer",
         name: currentPlayerName,
         quizId: currentQuizId,
-        choice: choice
+        choice
       });
 
       if (res.error) throw new Error(res.error);
@@ -602,26 +527,23 @@ async function api(payload) {
       if (!usedQuizIds.includes(currentQuizId)) {
         usedQuizIds.push(currentQuizId);
       }
-      questionCount = res.count || questionCount;
+      questionCount++;
 
       currentScore = res.newScore;
       document.getElementById("top-score").textContent = "점수: " + currentScore;
       updatePlayers(res.players || []);
-      gameOver = !!res.gameOver;
 
       const audioCorrect = document.getElementById("sound-correct");
       const audioWrong   = document.getElementById("sound-wrong");
 
-      if (res.isCorrect && !isTimeout) {
+      if (res.isCorrect) {
         status.textContent = "정답!";
         (choice === "O" ? btnO : btnX).classList.add("correct-glow");
         audioCorrect.currentTime = 0;
         audioCorrect.play();
       } else {
-        status.textContent = isTimeout
-          ? "⏰ 시간 초과! 오답 처리되었습니다."
-          : "오답!";
-        btnX.classList.add("wrong-shake");
+        status.textContent = "오답!";
+        (choice === "O" ? btnO : btnX).classList.add("wrong-shake");
         audioWrong.currentTime = 0;
         audioWrong.play();
       }
@@ -632,17 +554,17 @@ async function api(payload) {
         btnO.disabled = false;
         btnX.disabled = false;
 
-        if (gameOver || questionCount >= MAX_QUESTIONS) {
+        if (questionCount >= MAX_QUESTIONS) {
           endGame();
-          isAnswering = false;
         } else {
-          // 계속할지 물어보기
-          askNextStep();
-          isAnswering = false;
+          status.textContent = "";
+          loadQuiz();
         }
+        isAnswering = false;
       }, 900);
 
     } catch (e) {
+      console.error(e);
       status.textContent = "오류: " + (e.message || String(e));
       btnO.disabled = false;
       btnX.disabled = false;
@@ -650,32 +572,19 @@ async function api(payload) {
     }
   }
 
-  function askNextStep() {
-    const goOn = confirm("이번 문제를 풀었습니다.\n다음 문제로 계속 진행할까요?");
-    if (goOn) {
-      loadQuiz();
-    } else {
-      document.getElementById("quiz-status").textContent =
-        "일시 정지되었습니다. 나중에 다시 로그인하면 이어서 할 수 있어요.";
-      clearTimer();
-    }
-  }
-
   function endGame() {
     gameOver = true;
-    clearTimer();
-
     document.getElementById("quiz-question").textContent =
       "게임 종료! 총 " + questionCount + "문제를 풀었습니다.";
     document.getElementById("quiz-buttons").style.display = "none";
-    document.getElementById("quiz-status").textContent = "상점은 계속 사용할 수 있습니다.";
+    document.getElementById("quiz-status").textContent    = "상점은 계속 사용할 수 있습니다.";
     document.getElementById("final-scoreboard").style.display = "block";
 
     document.getElementById("final-message").textContent =
       currentPlayerName + "님의 최종 점수: " + currentScore + "점";
 
     api({ type: "getPlayers" }).then(p => {
-      updateFinalScoreboard(p.players || []);
+      if (!p.error) updateFinalScoreboard(p.players || []);
     });
   }
 
@@ -690,7 +599,7 @@ async function api(payload) {
     });
   }
 
-  /* PARTICLES */
+  /* 파티클 */
   function createParticles(btn) {
     const rect = btn.getBoundingClientRect();
     for (let i = 0; i < 10; i++) {
@@ -709,7 +618,7 @@ async function api(payload) {
     }
   }
 
-  /* TABS */
+  /* 탭 전환 */
   function switchTab(tab) {
     const storePanel = document.getElementById("store-panel");
     const chatPanel  = document.getElementById("chat-panel");
@@ -729,7 +638,7 @@ async function api(payload) {
     }
   }
 
-  /* PLAYERS */
+  /* 플레이어 리스트 */
   function updatePlayers(players) {
     const list     = document.getElementById("players-list");
     const minusSel = document.getElementById("minus-target");
@@ -767,7 +676,7 @@ async function api(payload) {
     }
   }
 
-  /* SHOP */
+  /* 상점 */
   async function useShop(type) {
     const msgEl    = document.getElementById("store-message");
     const minusSel = document.getElementById("minus-target");
@@ -801,14 +710,15 @@ async function api(payload) {
           : `${res.toName}에게 +1 선물했습니다!`;
 
     } catch (e) {
+      console.error(e);
       msgEl.textContent = e.message || String(e);
     }
   }
 
-  /* CHAT */
+  /* 채팅 */
   async function sendChat() {
     const input = document.getElementById("chat-input");
-    const msg = input.value.trim();
+    const msg   = input.value.trim();
     if (!msg) return;
 
     await api({
@@ -824,7 +734,7 @@ async function api(payload) {
   async function loadChatLog() {
     try {
       const res = await api({ type: "chatList", limit: 30 });
-      const log = Array.isArray(res) ? res : (res.list || []);
+      const log = Array.isArray(res) ? res : [];
 
       renderChatLog(log);
 
@@ -861,5 +771,3 @@ async function api(payload) {
 
 </body>
 </html>
-
-
